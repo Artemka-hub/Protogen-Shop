@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NEON ART — цифровая иллюстрация</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  --bg: #08080f;
+  --bg-card: #12121c;
+  --bg-card-hover: #1a1a2e;
+  --bg-input: #0f0f1a;
+  --purple: #a855f7;
+  --purple-glow: rgba(168, 85, 247, 0.45);
+  --cyan: #22d3ee;
+  --cyan-glow: rgba(34, 211, 238, 0.45);
+  --text: #e8e8f0;
+  --text-dim: #8888a0;
+  --border: rgba(168, 85, 247, 0.18);
+  --border-hover: rgba(168, 85, 247, 0.5);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body { padding: 24px 16px 100px; position: relative; }
+
+/* Neon glowing background orbs */
+.bg-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.bg-glow::before,
+.bg-glow::after {
+  content: "";
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.35;
+}
+.bg-glow::before {
+  background: var(--purple);
+  top: -100px;
+  left: -100px;
+}
+.bg-glow::after {
+  background: var(--cyan);
+  bottom: -100px;
+  right: -100px;
+}
+main { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; }
+
+/* Header */
+header { text-align: center; padding: 24px 0 32px; }
+.logo {
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px var(--purple-glow));
+}
+.subtitle {
+  color: var(--text-dim);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+
+/* Section headers */
+.section-title {
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 32px 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
+}
+
+/* Product cards */
+.grid { display: grid; gap: 12px; }
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--purple-glow), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+}
+.card:active {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  transform: scale(0.98);
+}
+.card:active::before { opacity: 0.15; }
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.card-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+.card-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--cyan);
+  text-shadow: 0 0 12px var(--cyan-glow);
+  white-space: nowrap;
+}
+.card-subtitle {
+  font-size: 12px;
+  color: var(--purple);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.card-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.card-order-btn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--purple);
+  color: var(--purple);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.card-order-btn:active {
+  background: var(--purple);
+  color: var(--bg);
+  box-shadow: 0 0 24px var(--purple-glow);
+}
+
+/* About block */
+.about-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+.about-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.08);
+  font-size: 14px;
+}
+.about-row:last-child { border-bottom: none; }
+.about-row span:first-child { color: var(--text-dim); }
+.about-row span:last-child { color: var(--text); font-weight: 600; }
+
+/* Contact */
+.contact-btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  color: var(--bg);
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 4px 24px var(--purple-glow);
+  transition: all 0.2s;
+}
+.contact-btn:active { transform: scale(0.97); }
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 100;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+.modal.active { display: flex; animation: fadeIn 0.25s ease; }
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border-hover);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px 20px 32px;
+  box-shadow: 0 -8px 48px var(--purple-glow);
+  animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.modal-close:active { background: var(--bg-card-hover); }
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.modal-subtitle {
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+/* License toggle */
+.license-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.license-label {
+  font-size: 14px;
+  color: var(--text);
+}
+.license-label small {
+  display: block;
+  color: var(--cyan);
+  font-size: 11px;
+  margin-top: 2px;
+  letter-spacing: 1px;
+}
+.switch {
+  position: relative;
+  width: 52px;
+  height: 30px;
+  flex-shrink: 0;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #2a2a40;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  top: 4px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.switch input:checked + .slider {
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  box-shadow: 0 0 16px var(--purple-glow);
+}
+.switch input:checked + .slider::before {
+  transform: translateX(22px);
+  background: white;
+}
+
+/* Price row */
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.price-label { font-size: 14px; color: var(--text-dim); }
+.total-price {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--cyan);
+  text-shadow: 0 0 16px var(--cyan-glow);
+}
+
+/* Form */
+form { display: flex; flex-direction: column; gap: 12px; }
+input, textarea {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+}
+input::placeholder, textarea::placeholder { color: var(--text-dim); }
+textarea { resize: vertical; min-height: 90px; }
+.submit-btn {
+  padding: 16px;
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  color: var(--bg);
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 8px;
+  box-shadow: 0 4px 24px var(--purple-glow);
+  transition: all 0.2s;
+}
+.submit-btn:active { transform: scale(0.97); }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Success screen */
+.success-screen {
+  text-align: center;
+  padding: 32px 0;
+}
+.success-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 20px var(--cyan-glow));
+}
+.success-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.success-text { color: var(--text-dim); font-size: 14px; }
+
+/* Browser warning */
+.browser-warning {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 13px;
+  z-index: 200;
+}
+body:not(.in-telegram) .browser-warning { display: block; }
+body:not(.in-telegram) main { margin-top: 40px; }
+</style>
+</head>
+<body>
+<div class="browser-warning">
+  ⚠️ Оформить заказ можно только внутри Telegram — откройте через бота
+</div>
+<div class="bg-glow"></div>
+
+<main>
+  <header>
+    <div class="logo">NEON ART</div>
+    <div class="subtitle">цифровая иллюстрация · тёмная эстетика</div>
+  </header>
+
+  <h2 class="section-title">Каталог работ</h2>
+  <div class="grid" id="catalog"></div>
+
+  <h2 class="section-title">О студии</h2>
+  <div class="about-block">
+    <div class="about-row"><span>Срок</span><span>3–10 дней</span></div>
+    <div class="about-row"><span>Правки</span><span>2 бесплатные</span></div>
+    <div class="about-row"><span>Формат</span><span>PNG высокого разрешения</span></div>
+    <div class="about-row"><span>Предоплата</span><span>50%</span></div>
+  </div>
+
+  <h2 class="section-title">Связь</h2>
+  <a href="https://t.me/artemikart" target="_blank" class="contact-btn">
+    💬 Написать менеджеру
+  </a>
+</main>
+
+<!-- Order modal -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="modal-close" id="closeModal">×</button>
+    <div id="formView">
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-subtitle" id="modalSubtitle"></div>
+
+      <div class="license-box">
+        <div class="license-label">
+          Коммерческая лицензия
+          <small>+100% к стоимости</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="commercial">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="price-row">
+        <span class="price-label">Итого</span>
+        <span class="total-price" id="totalPrice">0₽</span>
+      </div>
+
+      <form id="orderForm">
+        <input type="text" id="name" placeholder="Ваше имя" required maxlength="100">
+        <input type="text" id="contact" placeholder="@username / телефон / email" required maxlength="100">
+        <textarea id="description" placeholder="Опишите заказ: персонаж, стиль, референсы…" required maxlength="1000"></textarea>
+        <button type="submit" class="submit-btn" id="submitBtn">Оформить заказ</button>
+      </form>
+    </div>
+
+    <div id="successView" class="success-screen" style="display:none;">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Заказ принят!</div>
+      <div class="success-text">
+        Менеджер @artemikart свяжется с вами в ближайшее время
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────── Telegram WebApp init ───────
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+  if (tg.setHeaderColor) tg.setHeaderColor('#08080f');
+  if (tg.setBackgroundColor) tg.setBackgroundColor('#08080f');
+  document.body.classList.add('in-telegram');
+}
+
+// ─────── Data ───────
+const PRODUCTS = {
+  sketch: { name: "Ч/б скетч", subtitle: "голова", price: 200,
+    desc: "Быстрый чёрно-белый скетч головы персонажа. Живые линии, выразительная мимика." },
+  chibi: { name: "Цветной чиби", subtitle: "полный рост", price: 500,
+    desc: "Милый цветной чиби в полный рост. Чистый лайн и мягкие оттенки." },
+  furry: { name: "Фурри-портрет", subtitle: "цвет, простой фон", price: 800,
+    desc: "Портрет фурри-персонажа в цвете. Простой стилизованный фон." },
+  art: { name: "Полноценный арт", subtitle: "детализация, фон", price: 1500,
+    desc: "Полноценная работа с проработкой света, деталей и фона." },
+};
+
+let currentProduct = null;
+
+// ─────── Render catalog ───────
+const catalogEl = document.getElementById('catalog');
+Object.entries(PRODUCTS).forEach(([key, p]) => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="card-top">
+      <div class="card-name">${p.name}</div>
+      <div class="card-price">${p.price}₽</div>
+    </div>
+    <div class="card-subtitle">${p.subtitle}</div>
+    <div class="card-desc">${p.desc}</div>
+    <button class="card-order-btn" data-product="${key}">Оформить</button>
+  `;
+  catalogEl.appendChild(card);
+});
+
+catalogEl.addEventListener('click', e => {
+  const btn = e.target.closest('.card-order-btn');
+  if (!btn) return;
+  openModal(btn.dataset.product);
+  if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+});
+
+// ─────── Modal logic ───────
+const modal = document.getElementById('modal');
+const commercialInput = document.getElementById('commercial');
+const totalPriceEl = document.getElementById('totalPrice');
+const formView = document.getElementById('formView');
+const successView = document.getElementById('successView');
+const orderForm = document.getElementById('orderForm');
+
+function openModal(key) {
+  currentProduct = key;
+  const p = PRODUCTS[key];
+  document.getElementById('modalTitle').textContent = p.name;
+  document.getElementById('modalSubtitle').textContent = p.subtitle;
+  commercialInput.checked = false;
+  updatePrice();
+  formView.style.display = 'block';
+  successView.style.display = 'none';
+  orderForm.reset();
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+  currentProduct = null;
+}
+
+function updatePrice() {
+  if (!currentProduct) return;
+  const base = PRODUCTS[currentProduct].price;
+  const total = commercialInput.checked ? base * 2 : base;
+  totalPriceEl.textContent = `${total}₽`;
+}
+
+commercialInput.addEventListener('change', () => {
+  updatePrice();
+  if (tg?.HapticFeedback) tg.HapticFeedback.selectionChanged();
+});
+
+document.getElementById('closeModal').addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+// ─────── Submit order ───────
+orderForm.addEventListener('submit', e => {
+  e.preventDefault();
+  if (!currentProduct) return;
+
+  if (!tg) {
+    alert('Пожалуйста, откройте это приложение через Telegram-бота');
+    return;
+  }
+
+  const commercial = commercialInput.checked;
+  const base = PRODUCTS[currentProduct].price;
+  const total = commercial ? base * 2 : base;
+
+  const payload = {
+    type: 'order',
+    product: currentProduct,
+    product_name: PRODUCTS[currentProduct].name,
+    commercial,
+    total,
+    name: document.getElementById('name').value.trim(),
+    contact: document.getElementById('contact').value.trim(),
+    description: document.getElementById('description').value.trim(),
+  };
+
+  try {
+    tg.sendData(JSON.stringify(payload));
+    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    formView.style.display = 'none';
+    successView.style.display = 'block';
+    setTimeout(() => {
+      tg.close();
+    }, 2000);
+  } catch (err) {
+    alert('Ошибка отправки: ' + err.message);
+  }
+});
+</script>
+</body>
+</html>

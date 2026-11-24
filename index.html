@@ -84,9 +84,7 @@ body:not(.in-telegram) main { margin-top: 40px; }
 </style>
 </head>
 <body>
-<div class="browser-warning">
-  ⚠️ Оформить заказ можно только внутри Telegram — откройте через бота
-</div>
+<div class="browser-warning">⚠️ Оформить заказ можно только внутри Telegram — откройте через бота</div>
 <div class="bg-glow"></div>
 <main>
   <header>
@@ -103,9 +101,7 @@ body:not(.in-telegram) main { margin-top: 40px; }
     <div class="about-row"><span>Предоплата</span><span>50%</span></div>
   </div>
   <h2 class="section-title">Связь</h2>
-  <a href="https://t.me/artemikart" target="_blank" class="contact-btn">
-    💬 Написать менеджеру
-  </a>
+  <a href="https://t.me/PROTOGENV3" target="_blank" class="contact-btn">💬 Написать менеджеру (@PROTOGENV3)</a>
 </main>
 <div class="modal" id="modal">
   <div class="modal-content">
@@ -114,32 +110,24 @@ body:not(.in-telegram) main { margin-top: 40px; }
       <div class="modal-title" id="modalTitle"></div>
       <div class="modal-subtitle" id="modalSubtitle"></div>
       <div class="license-box">
-        <div class="license-label">
-          Коммерческая лицензия
-          <small>+100% к стоимости</small>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="commercial">
-          <span class="slider"></span>
-        </label>
+        <div class="license-label">Коммерческая лицензия<small>+100% к стоимости</small></div>
+        <label class="switch"><input type="checkbox" id="commercial"><span class="slider"></span></label>
       </div>
       <div class="price-row">
         <span class="price-label">Итого</span>
         <span class="total-price" id="totalPrice">0₽</span>
       </div>
       <form id="orderForm">
-        <input type="text" id="name" placeholder="Ваше имя" required maxlength="100">
-        <input type="text" id="contact" placeholder="@username / телефон / email" required maxlength="100">
-        <textarea id="description" placeholder="Опишите заказ: персонаж, стиль, референсы…" required maxlength="1000"></textarea>
-        <button type="submit" class="submit-btn" id="submitBtn">Оформить заказ</button>
+        <input type="text" id="name" placeholder="Ваше имя или никнейм" required maxlength="100">
+        <input type="text" id="contact" placeholder="Ваш контакт для связи (@username / телефон)" required maxlength="100">
+        <textarea id="description" placeholder="Опишите вашу идею рисунка (персонаж, стиль, референсы, пожелания)..." required maxlength="2000"></textarea>
+        <button type="submit" class="submit-btn" id="submitBtn">Отправить заявку</button>
       </form>
     </div>
     <div id="successView" class="success-screen" style="display:none;">
       <div class="success-icon">✅</div>
-      <div class="success-title">Заказ принят!</div>
-      <div class="success-text">
-        Менеджер @artemikart свяжется с вами в ближайшее время
-      </div>
+      <div class="success-title">Заявка отправлена!</div>
+      <div class="success-text">Менеджер @PROTOGENV3 свяжется с вами в ближайшее время</div>
     </div>
   </div>
 </div>
@@ -186,8 +174,7 @@ function openModal(key) {
   const p = PRODUCTS[key];
   document.getElementById('modalTitle').textContent = p.name;
   document.getElementById('modalSubtitle').textContent = p.subtitle;
-  commercialInput.checked = false;
-  updatePrice();
+  commercialInput.checked = false; updatePrice();
   formView.style.display = 'block'; successView.style.display = 'none';
   orderForm.reset(); modal.classList.add('active'); document.body.style.overflow = 'hidden';
 }
@@ -217,7 +204,7 @@ orderForm.addEventListener('submit', e => {
     tg.sendData(JSON.stringify(payload));
     if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
     formView.style.display = 'none'; successView.style.display = 'block';
-    setTimeout(() => { tg.close(); }, 2000);
+    setTimeout(() => { tg.close(); }, 2500);
   } catch (err) { alert('Ошибка отправки: ' + err.message); }
 });
 </script>

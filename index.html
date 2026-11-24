@@ -176,7 +176,10 @@ function openModal(key) {
   document.getElementById('modalSubtitle').textContent = p.subtitle;
   commercialInput.checked = false; updatePrice();
   formView.style.display = 'block'; successView.style.display = 'none';
-  orderForm.reset(); modal.classList.add('active'); document.body.style.overflow = 'hidden';
+  orderForm.reset(); 
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').textContent = 'Отправить заявку';
+  modal.classList.add('active'); document.body.style.overflow = 'hidden';
 }
 function closeModal() { modal.classList.remove('active'); document.body.style.overflow = ''; currentProduct = null; }
 function updatePrice() {
@@ -187,25 +190,59 @@ function updatePrice() {
 commercialInput.addEventListener('change', () => { updatePrice(); if (tg?.HapticFeedback) tg.HapticFeedback.selectionChanged(); });
 document.getElementById('closeModal').addEventListener('click', closeModal);
 modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-orderForm.addEventListener('submit', e => {
+
+orderForm.addEventListener('submit', async e => {
   e.preventDefault();
   if (!currentProduct) return;
-  if (!tg) { alert('Пожалуйста, откройте это приложение через Telegram-бота'); return; }
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Отправка...';
+
   const commercial = commercialInput.checked;
   const base = PRODUCTS[currentProduct].price;
-  const payload = {
-    type: 'order', product: currentProduct, product_name: PRODUCTS[currentProduct].name,
-    commercial, total: commercial ? base * 2 : base,
-    name: document.getElementById('name').value.trim(),
-    contact: document.getElementById('contact').value.trim(),
-    description: document.getElementById('description').value.trim(),
+  const total = commercial ? base * 2 : base;
+  
+  const data = {
+    Имя: document.getElementById('name').value.trim(),
+    Контакт: document.getElementById('contact').value.trim(),
+    Идея: document.getElementById('description').value.trim(),
+    Товар: PRODUCTS[currentProduct].name,
+    Лицензия: commercial ? 'Коммерческая (+100%)' : 'Личная',
+    Итого: total + '₽'
   };
+
   try {
-    tg.sendData(JSON.stringify(payload));
-    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-    formView.style.display = 'none'; successView.style.display = 'block';
-    setTimeout(() => { tg.close(); }, 2500);
-  } catch (err) { alert('Ошибка отправки: ' + err.message); }
+    // 1. Отправляем на почту через FormSubmit
+    await fetch("https://formsubmit.co/ajax/Artem_artemev2013@mail.ru", {
+      method: "POST",
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        _subject: "Новый заказ NEON ART",
+        ...data
+      })
+    });
+
+    // 2. Параллельно отправляем в Telegram (если открыто в боте)
+    if (tg) {
+      try {
+        tg.sendData(JSON.stringify({ type: 'order', ...data, total }));
+      } catch (err) { console.log("Telegram send skipped"); }
+    }
+
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    formView.style.display = 'none'; 
+    successView.style.display = 'block';
+    setTimeout(() => { if(tg) tg.close(); }, 2500);
+
+  } catch (error) {
+    alert('Ошибка отправки. Проверьте интернет.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Отправить заявку';
+  }
 });
 </script>
 </body>
